@@ -2,11 +2,78 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useSnapshot } from "valtio";
 import state from "../store/index.js";
 import { fadeAnimation, slideAnimation } from "../config/motion.js";
-import { CustomButton, Tab } from "../components/index.js";
-import { EditorTabs, FilterTabs } from "../config/constants.js";
+import {  ColorPicker, CustomButton, FilePicker, Tab } from "../components/index.js";
+import { DecalTypes, EditorTabs, FilterTabs } from "../config/constants.js";
+import { useState } from "react";
+import { reader } from "../config/helpers.js";
 
 const Customizer = () => {
   const snap = useSnapshot(state);
+
+  const [file, setFile] = useState('');
+
+  const [activeEditorTab, setActiveEditorTab] = useState('');
+  const [activeFilterTab, setActiveFilterTab] = useState({
+    logoShirt: true,
+    stylishShirt: false
+  });
+
+  // show tab content dependint on the activeTab
+  const generateTabContent = () => {
+    switch (activeEditorTab) {
+      case 'colorpicker':
+        return <ColorPicker />
+      case 'filepicker':
+        return <FilePicker
+            file={file}
+            setFile={setFile}
+            readFile={readFile}
+          />
+      default:
+        return null;
+    }
+  }
+
+  const handleDecals = (type, result) => {
+    const decalType = DecalTypes[type];
+
+    state[decalType.stateProperty] = result;
+
+    if (!activeFilterTab[decalType.filterTab]) {
+      handleActiveFilterTab(decalType.filterTab)
+    }
+  }
+
+  const handleActiveFilterTab = tabName => {
+    switch (tabName) {
+      case 'logoShirt':
+        state.isLogoTexture = !activeFilterTab[tabName];
+        break;
+      case 'stylishShirt':
+        state.isFullTexture = !activeFilterTab[tabName];
+        break;
+      default:
+        state.isFullTexture = false;
+        state.isLogoTexture = true;
+    }
+
+    // after setting the state, activeFilterTab is updated
+    setActiveFilterTab(prevState => {
+      return {
+        ...prevState,
+        [tabName]: !prevState[tabName]
+      }
+    })
+  }
+
+  const readFile = (type) => {
+    reader(file)
+      .then(result => {
+        handleDecals(type, result);
+        setActiveEditorTab('');
+      })
+  }
+
   return (
     <AnimatePresence>
       {!snap.intro && (
@@ -18,9 +85,11 @@ const Customizer = () => {
                   <Tab
                     key={tab.name}
                     tab={tab}
-                    handleClick={() => {}}
+                    handleClick={() => setActiveEditorTab(tab.name)}
                   />
                 ))}
+
+                {generateTabContent()}
               </div>
             </div>
           </motion.div>
@@ -40,8 +109,8 @@ const Customizer = () => {
                 key={tab.name}
                 tab={tab}
                 isFilterTab
-                isActiveTab=''
-                handleClick={() => {}}
+                isActiveTab={activeFilterTab[tab.name]}
+                handleClick={() => handleActiveFilterTab(tab.name)}
               />
             ))}
           </motion.div>

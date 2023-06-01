@@ -3,7 +3,7 @@ import { useSnapshot } from "valtio";
 import state from "../store/index.js";
 import { fadeAnimation, slideAnimation } from "../config/motion.js";
 import { CustomButton, Tab } from "../components/index.js";
-import { EditorTabs } from "../config/constants.js";
+import { EditorTabs, FilterTabs } from "../config/constants.js";
 
 const Customizer = () => {
   const snap = useSnapshot(state);
@@ -32,6 +32,18 @@ const Customizer = () => {
               handleClick={() => state.intro = true}
               customStyles='w-fit px-4 py-2.5 font-bold text-sm'
             />
+          </motion.div>
+
+          <motion.div className='filtertabs-container' {...slideAnimation('up')}>
+            {FilterTabs.map(tab => (
+              <Tab
+                key={tab.name}
+                tab={tab}
+                isFilterTab
+                isActiveTab=''
+                handleClick={() => {}}
+              />
+            ))}
           </motion.div>
         </>
       )}
